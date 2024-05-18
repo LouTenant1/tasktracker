@@ -13,7 +13,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 
 db = SQLAlchemy(app)
-password_hasher = Bcrypt(app)
+bcrypt = Bcrypt(app)
 jwt_manager = JWTManager(app)
 
 class User(db.Model):
@@ -35,7 +35,7 @@ def initialize_database():
 @app.route('/register', methods=['POST'])
 def register_user():
     user_data = request.get_json()
-    hashed_password = password_hasher.generate_password_hash(user_data['password']).decode('utf-8')
+    hashed_password = bcrypt.generate_password_hash(user_data['password']).decode('utf-8')
     new_user = User(username=user_data['username'], password_hash=hashed_password)
     db.session.add(new_user)
     db.session.commit()
@@ -45,11 +45,21 @@ def register_user():
 def authenticate_user():
     login_data = request.get_json()
     user = User.query.filter_by(username=login_data['username']).first()
-    if user and password_hasher.check_password_hash(user.password_hash, login_data['password']):
+    if user and bcrypt.check_password_hash(user.password_hash, login_data['password']):
         access_token = create_access_token(identity=user.id)
         return jsonify({'access_token': access_token}), 200
     else:
         return jsonify({'message': 'Invalid login credentials'}), 401
+
+@app.route('/tasks', methods=['GET'])  # Changed from '/task' to '/tasks' to fetch all tasks
+@jwt_required()
+def fetch_user_tasks():
+    user_id = get_jwt_identity()
+    tasks = Task.query.filter_by(owner_id=user_id).all()
+    task_list = [{'id': task.id, 'title': task.title,
+                  'description': task.description, 'is_complete': task.is_complete}
+                 for task in tasks]
+    return jsonify({'tasks': task_list})
 
 @app.route('/task', methods=['POST'])
 @jwt_required()
@@ -60,18 +70,6 @@ def add_task():
     db.session.add(new_task)
     db.session.commit()
     return jsonify({'message': 'New task added successfully'}), 201
-
-@app.route('/task', methods=['GET'])
-@jwt_required()
-def fetch_user_tasks():
-    user_id = get_jwt_identity()
-    tasks = Task.query.filter_by(owner_id=user_id).all()
-    task_list = [
-        {'id': task.id, 'title': task.title, 
-         'description': task.description, 'is_complete': task.is_complete}
-        for task in tasks
-    ]
-    return jsonify({'tasks': task_list})
 
 @app.route('/task/<int:task_id>', methods=['PUT'])
 @jwt_required()
