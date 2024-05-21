@@ -35,6 +35,8 @@ def initialize_database():
 @app.route('/register', methods=['POST'])
 def register_user():
     user_data = request.get_json()
+    if User.query.filter_by(username=user_data['username']).first():
+        return jsonify({'message': 'Username already exists. Please choose a different one.'}), 400
     hashed_password = bcrypt.generate_password_hash(user_data['password']).decode('utf-8')
     new_user = User(username=user_data['username'], password_hash=hashed_password)
     db.session.add(new_user)
@@ -51,7 +53,7 @@ def authenticate_user():
     else:
         return jsonify({'message': 'Invalid login credentials'}), 401
 
-@app.route('/tasks', methods=['GET'])  # Changed from '/task' to '/tasks' to fetch all tasks
+@app.route('/tasks', methods=['GET'])
 @jwt_required()
 def fetch_user_tasks():
     user_id = get_jwt_identity()
@@ -74,9 +76,12 @@ def add_task():
 @app.route('/task/<int:task_id>', methods=['PUT'])
 @jwt_required()
 def mark_task_as_complete(task_id):
+    user_id = get_jwt_identity()
     task = Task.query.get(task_id)
     if not task:
         return jsonify({'message': 'Task not found'}), 404
+    if task.owner_id != user_id:
+        return jsonify({'message': 'Unauthorized to modify this task'}), 403
     task.is_complete = True
     db.session.commit()
     return jsonify({'message': 'Task marked as complete'})
@@ -84,9 +89,12 @@ def mark_task_as_complete(task_id):
 @app.route('/task/<int:task_id>', methods=['DELETE'])
 @jwt_required()
 def remove_task(task_id):
+    user_id = get_jwt_identity()
     task = Task.query.get(task_id)
     if not task:
         return jsonify({'message': 'Task not found'}), 404
+    if task.owner_id != user_id:
+        return jsonify({'message': 'Unauthorized to remove this task'}), 403
     db.session.delete(task)
     db.session.commit()
     return jsonify({'message': 'Task removed successfully'})
