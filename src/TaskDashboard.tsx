@@ -15,6 +15,10 @@ const TaskDashboard: React.FC = () => {
   const [filter, setFilter] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState("");
 
+  useEffect(() => {
+    logTasks();
+  }, [tasks, filter, assigneeFilter]); // Calls logTasks on tasks or filters change
+
   const addTask = (task: Task) => {
     setTasks([...tasks, task]);
   };
@@ -39,6 +43,12 @@ const TaskDashboard: React.FC = () => {
     };
     addTask(newTask);
     event.currentTarget.reset();
+  };
+
+  const logTasks = () => {
+    console.log("Current Tasks:", tasks);
+    console.log("Current Status Filter:", filter);
+    console.log("Current Assignee Filter:", assigneeFilter);
   };
 
   const filterTasks = (tasks: Task[], filter: string, assigneeFilter: string) => {
