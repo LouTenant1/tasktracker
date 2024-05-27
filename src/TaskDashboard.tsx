@@ -16,52 +16,38 @@ const TaskDashboard: React.FC = () => {
   const [assigneeFilter, setAssigneeFilter] = useState("");
 
   useEffect(() => {
-    logCurrentTasksState();
-  }, [tasks, statusFilter, assigneeFilter]); // Calls logCurrentTasksState on tasks or filters change
+    console.log("Current Tasks:", tasks);
+    console.log("Current Status Filter:", statusFilter);
+    console.log("Current Assignee Filter:", assigneeFilter);
+  }, [tasks, statusFilter, assigneeFilter]);
 
-  const handleTaskAddition = (task: Task) => {
-    setTasks((currentTasks) => [...currentTasks, task]);
-  };
+  const handleTaskAddition = (task: Task) => setTasks((currentTasks) => [...currentTasks, task]);
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { title, description, priority, deadline, assignee } = event.currentTarget.elements as typeof event.currentTarget.elements & {
-      title: HTMLInputElement,
-      description: HTMLInputElement,
-      priority: HTMLSelectElement,
-      deadline: HTMLInputElement,
-      assignee: HTMLInputElement
-    };
-    
+    const form = event.currentTarget;
+    const { title, description, priority, deadline, assignee } = form.elements;
+
     const newTask: Task = {
       id: new Date().toISOString(),
-      title: title.value,
-      description: description.value,
-      priority: priority.value,
-      deadline: new Date(deadline.value),
-      assignee: assignee.value,
+      title: (title as HTMLInputElement).value,
+      description: (description as HTMLInputElement).value,
+      priority: (priority as HTMLSelectElement).value,
+      deadline: new Date((deadline as HTMLInputElement).value),
+      assignee: (assignee as HTMLInputElement).value,
       status: "To Do",
     };
 
     handleTaskAddition(newTask);
-    event.currentTarget.reset();
+    form.reset();
   };
 
-  const logCurrentTasksState = () => {
-    console.log("Current Tasks:", tasks);
-    console.log("Current Status Filter:", statusFilter);
-    console.log("Current Assignee Filter:", assigneeFilter);
-  };
+  const applyFiltersToTasks = (tasks: Task[]) => tasks.filter(task => 
+    (task.status === statusFilter || statusFilter === "") &&
+    (task.assignee === assigneeFilter || assigneeFilter === "")
+  );
 
-  const applyFiltersToTasks = (tasks: Task[], statusFilter: string, assigneeFilter: string) => {
-    return tasks.filter(task => {
-      const isStatusMatching = task.status === statusFilter || statusFilter === "";
-      const isAssigneeMatching = task.assignee === assigneeFilter || assigneeFilter === "";
-      return isStatusMatching && isAssigneeMatching;
-    });
-  };
-
-  const displayedTasks = applyFiltersToTasks(tasks, statusFilter, assigneeFilter);
+  const displayedTasks = applyFiltersToTasks(tasks);
 
   return (
     <div>
