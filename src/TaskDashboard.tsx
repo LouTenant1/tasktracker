@@ -11,24 +11,24 @@ type Task = {
 };
 
 const TaskDashboard: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [assigneeFilter, setAssigneeFilter] = useState("");
+  const [taskList, setTaskList] = useState<Task[]>([]);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterAssignee, setFilterAssignee] = useState("");
 
   useEffect(() => {
-    console.log("Current Tasks:", tasks);
-    console.log("Current Status Filter:", statusFilter);
-    console.log("Current Assignee Filter:", assigneeFilter);
-  }, [tasks, statusFilter, assigneeFilter]);
+    console.log("Current Tasks:", taskList);
+    console.log("Current Status Filter:", filterStatus);
+    console.log("Current Assignee Filter:", filterAssignee);
+  }, [taskList, filterStatus, filterAssignee]);
 
-  const handleTaskAddition = (task: Task) => setTasks((currentTasks) => [...currentTasks, task]);
+  const addTaskToList = (task: Task) => setTaskList((currentTasks) => [...currentTasks, task]);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleNewTaskSubmission = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     const { title, description, priority, deadline, assignee } = form.elements;
 
-    const newTask: Task = {
+    const taskToAdd: Task = {
       id: new Date().toISOString(),
       title: (title as HTMLInputElement).value,
       description: (description as HTMLInputElement).value,
@@ -38,21 +38,21 @@ const TaskDashboard: React.FC = () => {
       status: "To Do",
     };
 
-    handleTaskAddition(newTask);
+    addTaskToList(taskToAdd);
     form.reset();
   };
 
-  const applyFiltersToTasks = (tasks: Task[]) => tasks.filter(task => 
-    (task.status === statusFilter || statusFilter === "") &&
-    (task.assignee === assigneeFilter || assigneeFilter === "")
+  const filterTasks = (allTasks: Task[]) => allTasks.filter(task =>
+    (task.status === filterStatus || filterStatus === "") &&
+    (task.assignee === filterAssignee || filterAssignee === "")
   );
 
-  const displayedTasks = applyFiltersToTasks(tasks);
+  const tasksToDisplay = filterTasks(taskList);
 
   return (
     <div>
       <h1>Task Dashboard</h1>
-      <form onSubmit={handleFormSubmit}>
+      <form onSubmit={handleNewTaskSubmission}>
         <input name="title" placeholder="Title" required />
         <input name="description" placeholder="Description" required />
         <select name="priority" required>
@@ -66,7 +66,7 @@ const TaskDashboard: React.FC = () => {
         <button type="submit">Add Task</button>
       </form>
       <br />
-      <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter}>
+      <select onChange={(e) => setFilterStatus(e.target.value)} value={filterStatus}>
         <option value="">Filter by Status</option>
         <option value="To Do">To Do</option>
         <option value="In Progress">In Progress</option>
@@ -74,11 +74,11 @@ const TaskDashboard: React.FC = () => {
       </select>
       <input
         placeholder="Filter by Assignee"
-        onChange={(e) => setAssigneeFilter(e.target.value)}
-        value={assigneeFilter}
+        onChange={(e) => setFilterAssignee(e.target.value)}
+        value={filterAssignee}
       />
       <div>
-        {displayedTasks.map((task) => (
+        {tasksToDisplay.map((task) => (
           <div key={task.id}>
             <h2>{task.title}</h2>
             <p>Description: {task.description}</p>
