@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 interface Task {
@@ -12,7 +12,7 @@ const useTasks = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/tasks`);
@@ -22,29 +22,29 @@ const useTasks = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const addTask = async (title: string) => {
+  const addTask = useCallback(async (title: string) => {
     try {
       const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/tasks`, { title, completed: false });
       setTasks(prevTasks => [...prevTasks, response.data]);
     } catch (err) {
       setError('Failed to add task');
     }
-  };
+  }, []);
 
-  const updateTaskStatus = async (id: number, completed: boolean) => {
+  const updateTaskStatus = useCallback(async (id: number, completed: boolean) => {
     try {
       await axios.put(`${process.env.REACT_APP_BACKEND_URL}/tasks/${id}`, { completed });
-      setTasks(prevTasks => prevTasks.map(task => task.id === id ? { ...task, completed } : task));
+      setTasks(prevTasks => prevTasks.map(task => (task.id === id ? { ...task, completed } : task)));
     } catch (err) {
       setError('Failed to update task status');
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [fetchTasks]);
 
   return { tasks, loading, error, addTask, updateTaskStatus };
 };
