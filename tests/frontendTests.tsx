@@ -6,18 +6,18 @@ import { MyComponent } from './MyComponent';
 process.env.REACT_APP_API_BASE_URL = 'https://api.example.com';
 
 describe('MyComponent Tests', () => {
-  it('should render the component with the expected heading', async () => {
+  it('renders the component showing the expected heading text', async () => {
     render(<MyComponent />);
     expect(screen.getByRole('heading')).toHaveTextContent('Welcome');
   });
 
-  it('should update alert content when button is clicked', async () => {
+  it('updates the alert text upon button interaction', async () => {
     render(<MyComponent />);
     fireEvent.click(screen.getByText('Click Me'));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Clicked!'));
   });
 
-  it('should fetch data and display it within an article role', async () => {
+  it('performs data fetch and displays the result in an article element', async () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         json: () => Promise.resolve({ data: 'Sample fetched data' }),
@@ -28,12 +28,12 @@ describe('MyComponent Tests', () => {
     await waitFor(() => expect(screen.getByRole('article')).toHaveTextContent('Sample fetched data'));
   });
 
-  it('should render the component efficiently under a second', async () => {
-    const startTime = performance.now();
+  it('ensures component rendering is performed efficiently, within a performance budget', async () => {
+    const startRenderTime = performance.now();
     render(<MyComponent />);
-    const endTime = performance.now();
+    const endRenderTime = performance.now();
 
-    const renderDuration = endTime - startTime;
-    expect(renderDuration).toBeLessThan(1000);
+    const renderTimeElapsed = endRenderTime - startRenderTime;
+    expect(renderTimeElapsed).toBeLessThan(1000);
   });
 });
